@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huawei Solar Monitor - Dashboard Fotovoltaico</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌞 Huawei Solar Monitor</h1>
+            <div class="status-bar">
+                <span id="connection-status" class="status-indicator">🔴 Disconnesso</span>
+                <span id="last-update">Ultimo aggiornamento: --:--</span>
+            </div>
+        </header>
+
+        <!-- Dashboard Principale -->
+        <section class="dashboard">
+            <div class="card energy-flow">
+                <h2>Flusso Energetico in Tempo Reale</h2>
+                <div class="flow-diagram">
+                    <div class="flow-node solar">
+                        <div class="icon">☀️</div>
+                        <div class="label">Produzione PV</div>
+                        <div class="value" id="pv-production">0 kW</div>
+                    </div>
+                    <div class="flow-node battery">
+                        <div class="icon">🔋</div>
+                        <div class="label">Batteria</div>
+                        <div class="value" id="battery-soc">0%</div>
+                        <div class="power" id="battery-power">0 kW</div>
+                    </div>
+                    <div class="flow-node grid">
+                        <div class="icon">🔌</div>
+                        <div class="label">Rete</div>
+                        <div class="value" id="grid-power">0 kW</div>
+                    </div>
+                    <div class="flow-node home">
+                        <div class="icon">🏠</div>
+                        <div class="label">Consumo Casa</div>
+                        <div class="value" id="home-consumption">0 kW</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-grid">
+                <div class="stat-card">
+                    <h3>Produzione Oggi</h3>
+                    <div class="stat-value" id="daily-production">0 kWh</div>
+                    <div class="stat-cost" id="daily-savings">€ 0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Consumo Oggi</h3>
+                    <div class="stat-value" id="daily-consumption">0 kWh</div>
+                    <div class="stat-cost" id="daily-cost">€ 0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Autoconsumo</h3>
+                    <div class="stat-value" id="self-consumption">0%</div>
+                    <div class="stat-label">PV utilizzato direttamente</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Immesso in Rete</h3>
+                    <div class="stat-value" id="grid-feed">0 kWh</div>
+                    <div class="stat-cost" id="grid-feed-revenue">€ 0.00</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grafici -->
+        <section class="charts">
+            <div class="card chart-container">
+                <h2>Produzione e Consumo (24h)</h2>
+                <canvas id="power-chart"></canvas>
+            </div>
+            <div class="card chart-container">
+                <h2>Distribuzione Energetica</h2>
+                <canvas id="energy-pie-chart"></canvas>
+            </div>
+        </section>
+
+        <!-- Pannello Configurazione -->
+        <section class="config-panel">
+            <div class="card">
+                <h2>⚙️ Configurazione</h2>
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="inverter-ip">IP Inverter Huawei:</label>
+                        <input type="text" id="inverter-ip" placeholder="192.168.1.100">
+                    </div>
+                    <div class="form-group">
+                        <label for="modbus-port">Porta Modbus:</label>
+                        <input type="number" id="modbus-port" value="502">
+                    </div>
+                    <div class="form-group">
+                        <label for="tariff-type">Tipo Tariffa:</label>
+                        <select id="tariff-type">
+                            <option value="octopus">Octopus Energy Italia</option>
+                            <option value="f1f23">Bioraria (F1/F23)</option>
+                            <option value="fixed">Mono-oraria</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="energy-price">Prezzo Energia (€/kWh):</label>
+                        <input type="number" id="energy-price" step="0.01" value="0.25">
+                    </div>
+                    <div class="form-group">
+                        <label for="feed-in-price">Prezzo Immissione (€/kWh):</label>
+                        <input type="number" id="feed-in-price" step="0.01" value="0.12">
+                    </div>
+                    <div class="form-group">
+                        <label for="update-interval">Intervallo Aggiornamento (sec):</label>
+                        <input type="number" id="update-interval" value="5">
+                    </div>
+                    <button id="save-config" class="btn-primary">💾 Salva Configurazione</button>
+                    <button id="test-connection" class="btn-secondary">🔌 Test Connessione</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistiche Dettagliate -->
+        <section class="details">
+            <div class="card">
+                <h2>📊 Statistiche Dettagliate</h2>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Da PV Diretto:</span>
+                        <span class="detail-value" id="pv-direct">0 kWh</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Da Batteria:</span>
+                        <span class="detail-value" id="battery-discharge">0 kWh</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Da Rete:</span>
+                        <span class="detail-value" id="grid-import">0 kWh</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Carica Batteria:</span>
+                        <span class="detail-value" id="battery-charge">0 kWh</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Efficienza Sistema:</span>
+                        <span class="detail-value" id="system-efficiency">0%</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">CO₂ Risparmiata:</span>
+                        <span class="detail-value" id="co2-saved">0 kg</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Huawei Solar Monitor v1.0 - Monitoraggio Fotovoltaico con Octopus Energy Italia</p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
